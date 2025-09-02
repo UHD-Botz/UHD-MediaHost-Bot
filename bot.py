@@ -25,7 +25,6 @@ class UHDMediaToLinkBot(Client):
     async def start(self):
         await super().start()
         me = await self.get_me()
-        self.mention = me.mention
         self.username = me.username
         self.uptime = BOT_UPTIME
 
@@ -36,14 +35,13 @@ class UHDMediaToLinkBot(Client):
 
         print(f"{me.first_name} Started.....✨️")
 
-        # Notify admin
         if getattr(Config, "ADMIN", None):
             try:
-                await self.send_message(Config.ADMIN, f"**__{me.first_name} Started.....✨️__**")
+                await self.send_message(Config.ADMIN, f"**{me.first_name} Started.....✨️**")
             except:
                 pass
 
-        # Register handlers after bot has started
+        # Add handlers
         self.add_handlers()
 
     async def stop(self, *args):
@@ -51,40 +49,51 @@ class UHDMediaToLinkBot(Client):
         print("Bot Stopped 🙄")
 
     def add_handlers(self):
+        # -----------------
         # Ping
+        # -----------------
         @self.on_message(filters.command("ping"))
         async def ping(bot, message):
-            start_time = time.time()
+            start = time.time()
             msg = await message.reply_text("🏓 Pinging...")
-            end_time = time.time()
-            await msg.edit_text(f"🏓 Pong!\nResponse time: {round((end_time - start_time)*1000)} ms")
+            end = time.time()
+            await msg.edit_text(f"🏓 Pong!\nResponse time: {round((end-start)*1000)} ms")
 
+        # -----------------
         # Uptime
+        # -----------------
         @self.on_message(filters.command("uptime"))
         async def uptime(bot, message):
             uptime_seconds = int(time.time() - BOT_UPTIME)
             hours, remainder = divmod(uptime_seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
-            uptime_text = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
-            await message.reply_text(f"⏱ Bot Uptime: `{uptime_text}`")
+            await message.reply_text(f"⏱ Bot Uptime: {hours}h {minutes}m {seconds}s")
 
-        # Emoji Reaction (non-command messages)
+        # -----------------
+        # Emoji reaction
+        # -----------------
         @self.on_message(filters.text)
-        async def react_with_emoji(bot, message):
+        async def react(bot, message):
             if message.text.startswith("/"):
-                return
+                return  # Ignore commands
             try:
                 await message.reply_text("👍")
             except Exception:
                 pass
 
-        # Restart (admin only)
+        # -----------------
+        # Restart (works only on VPS/Docker)
+        # -----------------
         @self.on_message(filters.command("restart") & filters.user(Config.ADMIN))
-        async def restart_bot(client, message):
-            await message.reply_text("♻️ Restarting the bot...")
+        async def restart_bot(bot, message):
+            await message.reply_text("♻️ Restarting...")
             await asyncio.sleep(1)
-            await client.stop()
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            try:
+                await bot.stop()
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            except Exception:
+                await message.reply_text("⚠️ Restart failed. Platform may not support os.execv.")
+
 
 if __name__ == "__main__":
     UHDMediaToLinkBot().run()
