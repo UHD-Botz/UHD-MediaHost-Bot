@@ -35,9 +35,10 @@ class UHDMediaToLinkBot(Client):
 
         print(f"{me.first_name} Started.....✨️")
 
+        # Notify admin when bot starts/restarts
         if getattr(Config, "ADMIN", None):
             try:
-                await self.send_message(Config.ADMIN, f"**{me.first_name} Started.....✨️**")
+                await self.send_message(Config.ADMIN, "✅ Bot restarted and is now online!")
             except:
                 pass
 
@@ -70,7 +71,7 @@ class UHDMediaToLinkBot(Client):
             await message.reply_text(f"⏱ Bot Uptime: {hours}h {minutes}m {seconds}s")
 
         # -----------------
-        # Restart (Safe)
+        # Restart (Safe for Koyeb/Heroku)
         # -----------------
         @self.on_message(filters.command("restart") & filters.user(Config.ADMIN))
         async def restart_handler(bot, message):
@@ -78,7 +79,7 @@ class UHDMediaToLinkBot(Client):
 
             async def restart_later():
                 await asyncio.sleep(1)  # Let the reply send
-                os.execl(sys.executable, sys.executable, *sys.argv)
+                os._exit(0)  # Exit process, platform restarts container
 
             asyncio.create_task(restart_later())
 
