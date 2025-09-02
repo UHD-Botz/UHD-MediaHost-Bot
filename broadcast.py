@@ -1,13 +1,13 @@
 from pyrogram import Client, filters
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from pyrogram.errors import FloodWait, UserIsBlocked, PeerIdInvalid, InputUserDeactivated
 import asyncio
-import re
 from config import ADMIN
 
 # In-memory storage for users
-USERS = set()  # store user IDs
+USERS = set()
 
+# Parse inline buttons in broadcast messages
 def parse_button_markup(text: str):
     lines = text.split("\n")
     buttons = []
@@ -17,6 +17,7 @@ def parse_button_markup(text: str):
         parts = line.split("||")
         is_button_line = True
         for part in parts:
+            import re
             match = re.fullmatch(r"\[(.+?)\]\((https?://[^\s]+)\)", part.strip())
             if match:
                 row.append(InlineKeyboardButton(match[1], url=match[2]))
@@ -32,19 +33,18 @@ def parse_button_markup(text: str):
 
 @Client.on_message(filters.private & filters.command("start"))
 async def register_user(client: Client, message: Message):
-    # Add user to in-memory list
     USERS.add(message.from_user.id)
-    await message.reply("✅ You are registered to receive broadcasts.")
+    await message.reply_text("✅ You are registered to receive broadcasts.")
 
 
-@Client.on_message(filters.command("broadcast") & filters.private & filters.user(ADMIN))
+@Client.on_message(filters.private & filters.command("broadcast") & filters.user(ADMIN))
 async def broadcasting_func(client: Client, message: Message):
     if not message.reply_to_message:
-        return await message.reply("Reply to a message to broadcast.")
-    
-    msg = await message.reply_text("Processing broadcast...")
+        return await message.reply_text("⚠️ Reply to a message to broadcast.")
+
+    msg = await message.reply_text("⏳ Processing broadcast...")
     to_copy_msg = message.reply_to_message
-    users_list = list(USERS)  # use in-memory USERS
+    users_list = list(USERS)
     completed = 0
     failed = 0
 
@@ -65,7 +65,7 @@ async def broadcasting_func(client: Client, message: Message):
                 await to_copy_msg.copy(user_id)
             completed += 1
         except (UserIsBlocked, PeerIdInvalid, InputUserDeactivated):
-            USERS.discard(user_id)  # remove user from list
+            USERS.discard(user_id)
             failed += 1
         except FloodWait as e:
             await asyncio.sleep(e.value)
@@ -78,10 +78,10 @@ async def broadcasting_func(client: Client, message: Message):
             print(f"Broadcast to {user_id} failed: {e}")
             failed += 1
 
-        await msg.edit(f"Total: {i + 1}\nCompleted: {completed}\nFailed: {failed}")
+        await msg.edit(f"Total: {i+1}\nCompleted: {completed}\nFailed: {failed}")
         await asyncio.sleep(0.1)
 
     await msg.edit(
-        f"😶‍🌫 Broadcast Completed\n\n👥 Total Users: {len(users_list)}\n✅ Successful: {completed}\n🤯 Failed: {failed}",
+        f"📣 Broadcast Completed\n\nTotal Users: {len(users_list)}\n✅ Successful: {completed}\n❌ Failed: {failed}",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🎭 Close", callback_data="close")]])
     )
