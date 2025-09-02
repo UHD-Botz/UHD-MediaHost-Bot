@@ -1,4 +1,3 @@
-# utils.py
 import aiohttp
 import os
 import time
@@ -26,8 +25,8 @@ async def web_server():
 
 async def upload_to_envs(file_path: str, timeout: int = 120) -> str:
     """
-    Uploads file to envs.sh. Tries PUT to https://envs.sh/<filename> first,
-    then falls back to multipart POST to https://envs.sh/ if PUT fails.
+    Uploads file to envs.sh. First tries PUT to https://envs.sh/<filename>, 
+    then falls back to multipart POST if PUT fails.
     Returns the URL string on success, raises RuntimeError on failure.
     """
     filename = os.path.basename(file_path)
@@ -43,7 +42,7 @@ async def upload_to_envs(file_path: str, timeout: int = 120) -> str:
                         if resp.status in (200, 201):
                             return text.strip()
                 except Exception:
-                    # fallback to POST
+                    # fallback to POST if PUT fails
                     pass
     except Exception as e:
         raise RuntimeError(f"Failed to open file for upload: {e}")
