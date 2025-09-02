@@ -17,7 +17,7 @@ class UHDMediaToLinkBot(Client):
             api_id=Config.API_ID,
             api_hash=Config.API_HASH,
             bot_token=Config.BOT_TOKEN,
-            plugins={"root": "plugins"},  # change from UHDMediaToLinkBot to plugins folder
+            plugins={"root": "UHD_MediaHost"},  # change from UHDMediaToLinkBot to plugins folder
             workers=200,
             sleep_threshold=15,
         )
