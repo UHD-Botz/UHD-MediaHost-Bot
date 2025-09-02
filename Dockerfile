@@ -1,17 +1,14 @@
-FROM rkndeveloper/python-phantomjs:3.9
+FROM python:3.11-slim
 
-# Copy coding files to workdir
-COPY . /app/
-WORKDIR /app/
-
-ENV PYTHONUNBUFFERED=1
-
-# Copy requirements.txt to root
-COPY requirements.txt .
+# Working directory
+WORKDIR /app
 
 # Install dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN apt-get update
-#RUN apt-get install -y ffmpeg
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD python3 bot.py
+# Copy project files
+COPY . .
+
+# Run the bot
+CMD ["python3", "bot.py"]
