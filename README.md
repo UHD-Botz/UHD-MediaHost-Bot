@@ -99,7 +99,7 @@ python3 bot.py
 
 <p align="center">
   <a href="https://www.apache.org/licenses/LICENSE-2.0">
-    <img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge" alt="license"/>
+    <img src="https://img.shields.io/github/license/UHD-Botz/UHD-MediaHost-Bot?style=for-the-badge" alt="license"/>
   </a>
 </p>
 
