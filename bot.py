@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import asyncio
 from datetime import datetime
 from pyrogram import Client, filters
 from aiohttp import web
@@ -27,6 +28,7 @@ class UHDMediaToLinkBot(Client):
         self.username = me.username
         self.uptime = BOT_UPTIME
 
+        # Start web server
         app = web.AppRunner(await web_server())
         await app.setup()
         await web.TCPSite(app, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
@@ -39,6 +41,7 @@ class UHDMediaToLinkBot(Client):
             except:
                 pass
 
+        # Register handlers
         self.add_handlers()
 
     async def stop(self, *args):
@@ -46,6 +49,9 @@ class UHDMediaToLinkBot(Client):
         print("Bot Stopped 🙄")
 
     def add_handlers(self):
+        # -----------------
+        # Ping
+        # -----------------
         @self.on_message(filters.command("ping"))
         async def ping(bot, message):
             start = time.time()
@@ -53,6 +59,9 @@ class UHDMediaToLinkBot(Client):
             end = time.time()
             await msg.edit_text(f"🏓 Pong!\nResponse time: {round((end-start)*1000)} ms")
 
+        # -----------------
+        # Uptime
+        # -----------------
         @self.on_message(filters.command("uptime"))
         async def uptime(bot, message):
             uptime_seconds = int(time.time() - BOT_UPTIME)
@@ -60,11 +69,19 @@ class UHDMediaToLinkBot(Client):
             minutes, seconds = divmod(remainder, 60)
             await message.reply_text(f"⏱ Bot Uptime: {hours}h {minutes}m {seconds}s")
 
+        # -----------------
+        # Restart (Safe)
+        # -----------------
         @self.on_message(filters.command("restart") & filters.user(Config.ADMIN))
-        async def restart(bot, message):
+        async def restart_handler(bot, message):
             await message.reply_text("♻️ Restarting bot...")
-            await bot.stop()
-            os.execl(sys.executable, sys.executable, *sys.argv)
+
+            async def restart_later():
+                await asyncio.sleep(1)  # Let the reply send
+                os.execl(sys.executable, sys.executable, *sys.argv)
+
+            asyncio.create_task(restart_later())
+
 
 if __name__ == "__main__":
     UHDMediaToLinkBot().run()
