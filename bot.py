@@ -4,12 +4,11 @@ import asyncio
 from pyrogram import Client, filters
 from aiohttp import web
 from config import Config
-from broadcast import USERS  # import USERS for broadcast memory
-from broadcast import broadcasting_func  # register broadcast handler
 from utils import web_server
+from db import is_banned, ban_user, unban_user
+import broadcast  # register broadcast/start handler
 
 BOT_UPTIME = time.time()
-BANNED_USERS = set()  # In-memory banned users
 
 class UHDMediaToLinkBot(Client):
     def __init__(self):
@@ -36,14 +35,12 @@ class UHDMediaToLinkBot(Client):
 
         print(f"{me.first_name} Started.....✨️")
 
-        # Notify admin
         if getattr(Config, "ADMIN", None):
             try:
                 await self.send_message(Config.ADMIN[0], "✅ Bot restarted and is now online!")
             except:
                 pass
 
-        # Register handlers
         self.add_handlers()
 
     async def stop(self, *args):
@@ -78,39 +75,33 @@ class UHDMediaToLinkBot(Client):
 
         # Ban
         @self.on_message(filters.command("ban") & filters.user(Config.ADMIN))
-        async def ban_user(bot, message):
+        async def ban_user_cmd(bot, message):
             if not message.reply_to_message:
                 await message.reply_text("⚠️ Reply to the user to ban.")
                 return
             user_id = message.reply_to_message.from_user.id
-            if user_id in BANNED_USERS:
-                await message.reply_text("User is already banned.")
-                return
-            BANNED_USERS.add(user_id)
+            await ban_user(user_id)
             await message.reply_text(f"✅ User {user_id} banned.")
 
         # Unban
         @self.on_message(filters.command("unban") & filters.user(Config.ADMIN))
-        async def unban_user(bot, message):
+        async def unban_user_cmd(bot, message):
             if not message.reply_to_message:
-                await message.reply_text("⚠️ Reply to the banned user to unban.")
+                await message.reply_text("⚠️ Reply to the user to unban.")
                 return
             user_id = message.reply_to_message.from_user.id
-            if user_id not in BANNED_USERS:
-                await message.reply_text("User is not banned.")
-                return
-            BANNED_USERS.remove(user_id)
+            await unban_user(user_id)
             await message.reply_text(f"✅ User {user_id} unbanned.")
 
         # Block banned users
         @self.on_message(filters.incoming)
         async def block_banned(bot, message):
-            if message.from_user and message.from_user.id in BANNED_USERS:
+            if message.from_user and await is_banned(message.from_user.id):
                 try:
                     await message.delete()
                 except:
                     pass
-                return  # stop processing
+                return
 
 
 if __name__ == "__main__":
