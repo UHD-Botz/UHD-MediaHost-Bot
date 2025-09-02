@@ -3,9 +3,6 @@ from pyrogram import Client, filters
 from aiohttp import web
 from utils import web_server
 import time
-import asyncio
-import os
-import sys
 from config import Config
 
 BOT_UPTIME = time.time()
@@ -41,7 +38,7 @@ class UHDMediaToLinkBot(Client):
             except:
                 pass
 
-        # Add handlers
+        # Register handlers
         self.add_handlers()
 
     async def stop(self, *args):
@@ -68,31 +65,6 @@ class UHDMediaToLinkBot(Client):
             hours, remainder = divmod(uptime_seconds, 3600)
             minutes, seconds = divmod(remainder, 60)
             await message.reply_text(f"⏱ Bot Uptime: {hours}h {minutes}m {seconds}s")
-
-        # -----------------
-        # Emoji reaction
-        # -----------------
-        @self.on_message(filters.text)
-        async def react(bot, message):
-            if message.text.startswith("/"):
-                return  # Ignore commands
-            try:
-                await message.reply_text("👍")
-            except Exception:
-                pass
-
-        # -----------------
-        # Restart (works only on VPS/Docker)
-        # -----------------
-        @self.on_message(filters.command("restart") & filters.user(Config.ADMIN))
-        async def restart_bot(bot, message):
-            await message.reply_text("♻️ Restarting...")
-            await asyncio.sleep(1)
-            try:
-                await bot.stop()
-                os.execv(sys.executable, [sys.executable] + sys.argv)
-            except Exception:
-                await message.reply_text("⚠️ Restart failed. Platform may not support os.execv.")
 
 
 if __name__ == "__main__":
