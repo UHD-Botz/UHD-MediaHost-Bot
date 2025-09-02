@@ -1,6 +1,6 @@
 from datetime import datetime
 from pytz import timezone
-from pyrogram import Client
+from pyrogram import Client, filters
 from aiohttp import web
 from utils import web_server
 import time
@@ -45,6 +45,45 @@ class UHDMediaToLinkBot(Client):
     async def stop(self, *args):
         await super().stop()
         print("Bot Stopped 🙄")
+
+
+# -----------------------------
+# Ping Feature
+# -----------------------------
+@UHDMediaToLinkBot.on_message(filters.command("ping"))
+async def ping(bot, message):
+    start_time = time.time()
+    msg = await message.reply_text("🏓 Pinging...")
+    end_time = time.time()
+    await msg.edit_text(f"🏓 Pong!\nResponse time: {round((end_time - start_time)*1000)} ms")
+
+
+# -----------------------------
+# Stats Feature
+# -----------------------------
+@UHDMediaToLinkBot.on_message(filters.command("stats"))
+async def stats(bot, message):
+    uptime_seconds = int(time.time() - BOT_UPTIME)
+    uptime = str(datetime.utcfromtimestamp(uptime_seconds).strftime("%H:%M:%S"))
+    text = (
+        f"📊 **Bot Statistics**\n"
+        f"• Uptime: `{uptime}`\n"
+        f"• Bot Name: `{bot.username}`\n"
+        f"• Admin: `{Config.ADMIN}`"
+    )
+    await message.reply_text(text)
+
+
+# -----------------------------
+# Emoji / Reaction Feature
+# -----------------------------
+@UHDMediaToLinkBot.on_message(filters.text & ~filters.command)
+async def react_with_emoji(bot, message):
+    try:
+        # Simple reaction: reply with a 👍 emoji to every text message
+        await message.reply_text("👍")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
