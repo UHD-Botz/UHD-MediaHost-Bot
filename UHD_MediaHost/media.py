@@ -4,9 +4,17 @@ from utils import upload_to_envs
 import os, time
 import pyrogram.errors
 
+# Helper function to safely edit messages
+async def safe_edit(message, new_text, reply_markup=None):
+    if message.text != new_text:
+        try:
+            await message.edit_text(text=new_text, disable_web_page_preview=False, reply_markup=reply_markup)
+        except pyrogram.errors.MessageNotModified:
+            pass
+
 @Client.on_message(filters.media & filters.private)
 async def media_handler(bot, update):
-    # file size check
+    # File size check
     try:
         file = getattr(update, update.media.value)
         if file.file_size and file.file_size > 200*1024*1024:
@@ -14,7 +22,7 @@ async def media_handler(bot, update):
     except:
         pass
 
-    message = await update.reply_text("⏳ Processing...", quote=True, disable_web_page_preview=True)
+    message = await update.reply_text("⏳ Processing... 0%", quote=True, disable_web_page_preview=True)
 
     ext = ""
     if update.photo: ext = ".jpg"
@@ -28,19 +36,22 @@ async def media_handler(bot, update):
     if not os.path.exists(dl_dir):
         os.makedirs(dl_dir, exist_ok=True)
 
+    # Download with progress updates
+    async def download_progress(current, total):
+        percent = int(current * 100 / total)
+        if percent in [25, 50, 75]:
+            await safe_edit(message, f"⏳ Processing... {percent}%")
+
     dl_path = await bot.download_media(
         message=update,
-        progress=None,
+        progress=download_progress,
         file_name=os.path.join(dl_dir, filename)
     )
 
     try:
         link = await upload_to_envs(dl_path)
     except Exception as e:
-        try:
-            await message.edit_text(f"❌ Upload failed: {e}")
-        except pyrogram.errors.MessageNotModified:
-            pass  # ignore if same content
+        await safe_edit(message, f"❌ Upload failed: {e}")
         if os.path.exists(dl_path): os.remove(dl_path)
         return
 
@@ -50,13 +61,8 @@ async def media_handler(bot, update):
         [InlineKeyboardButton("Updates Channel", url="https://t.me/RknDeveloper")]
     ])
 
-    # Check before editing to avoid MESSAGE_NOT_MODIFIED error
-    new_text = f"🔗 Link: `{link}`"
-    if message.text != new_text:
-        try:
-            await message.edit_text(text=new_text, disable_web_page_preview=False, reply_markup=reply_markup)
-        except pyrogram.errors.MessageNotModified:
-            pass
+    # Final message with the link
+    await safe_edit(message, f"🔗 Link: `{link}`", reply_markup=reply_markup)
 
     # Clean up downloaded file
     if os.path.exists(dl_path): os.remove(dl_path)
