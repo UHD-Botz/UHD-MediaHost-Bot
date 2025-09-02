@@ -2,6 +2,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import upload_to_envs
 import os, time
+import pyrogram.errors
 
 @Client.on_message(filters.media & filters.private)
 async def media_handler(bot, update):
@@ -36,7 +37,10 @@ async def media_handler(bot, update):
     try:
         link = await upload_to_envs(dl_path)
     except Exception as e:
-        await message.edit_text(f"❌ Upload failed: {e}")
+        try:
+            await message.edit_text(f"❌ Upload failed: {e}")
+        except pyrogram.errors.MessageNotModified:
+            pass  # ignore if same content
         if os.path.exists(dl_path): os.remove(dl_path)
         return
 
@@ -45,5 +49,14 @@ async def media_handler(bot, update):
          InlineKeyboardButton("Share Link", url=f"https://telegram.me/share/url?url={link}")],
         [InlineKeyboardButton("Updates Channel", url="https://t.me/RknDeveloper")]
     ])
-    await message.edit_text(text=f"🔗 Link: `{link}`", disable_web_page_preview=False, reply_markup=reply_markup)
+
+    # Check before editing to avoid MESSAGE_NOT_MODIFIED error
+    new_text = f"🔗 Link: `{link}`"
+    if message.text != new_text:
+        try:
+            await message.edit_text(text=new_text, disable_web_page_preview=False, reply_markup=reply_markup)
+        except pyrogram.errors.MessageNotModified:
+            pass
+
+    # Clean up downloaded file
     if os.path.exists(dl_path): os.remove(dl_path)
