@@ -2,7 +2,7 @@ from datetime import datetime
 from pytz import timezone
 from pyrogram import Client
 from aiohttp import web
-from utils import web_server
+from utils import web_server, send_log_message
 import time
 from config import Config
 
@@ -35,13 +35,20 @@ class UHDMediaToLinkBot(Client):
         await web.TCPSite(app, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
             
         print(f"{me.first_name} Started.....✨️")
+
+        # Log to admin
         if getattr(Config, "ADMIN", None):
             try:
                 await self.send_message(Config.ADMIN, f"**__{me.first_name} Started.....✨️__**")
             except:
                 pass
-                
+
+        # Log to LOG_CHANNEL
+        await send_log_message(self, f"**__{me.first_name} Bot Started at {datetime.now()} ✨️__**")
+
     async def stop(self, *args):
+        # Log stop to LOG_CHANNEL
+        await send_log_message(self, f"**__Bot Stopped at {datetime.now()} 🙄__**")
         await super().stop()
         print("Bot Stopped 🙄")
 
