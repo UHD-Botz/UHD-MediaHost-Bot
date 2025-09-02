@@ -1,16 +1,14 @@
 from datetime import datetime
 from pytz import timezone
-from pyrogram import Client, __version__, filters
-from pyrogram.raw.all import layer
+from pyrogram import Client
 from aiohttp import web
 from utils import web_server
 import time
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-
 from config import Config
 
 # other configs
 BOT_UPTIME = time.time()
+
 
 class UHDMediaToLinkBot(Client):
     def __init__(self):
@@ -19,7 +17,7 @@ class UHDMediaToLinkBot(Client):
             api_id=Config.API_ID,
             api_hash=Config.API_HASH,
             bot_token=Config.BOT_TOKEN,
-            plugins={"root": "UHDMediaToLinkBot"},
+            plugins={"root": "plugins"},  # change from UHDMediaToLinkBot to plugins folder
             workers=200,
             sleep_threshold=15,
         )
@@ -31,14 +29,15 @@ class UHDMediaToLinkBot(Client):
         self.username = me.username  
         self.uptime = BOT_UPTIME
         
+        # Start web server for health checks
         app = web.AppRunner(await web_server())
-        await app.setup()       
-        await web.TCPSite(app, "0.0.0.0", Config.PORT).start()
+        await app.setup()
+        await web.TCPSite(app, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
             
         print(f"{me.first_name} Started.....✨️")
-        if Config.ADMIN:
+        if getattr(Config, "ADMIN", None):
             try:
-                await self.send_message(Config.ADMIN, f"**__{me.first_name} Started.....✨️__**")                                
+                await self.send_message(Config.ADMIN, f"**__{me.first_name} Started.....✨️__**")
             except:
                 pass
                 
@@ -46,5 +45,6 @@ class UHDMediaToLinkBot(Client):
         await super().stop()
         print("Bot Stopped 🙄")
 
-            
-UHDMediaToLinkBot().run()
+
+if __name__ == "__main__":
+    UHDMediaToLinkBot().run()
