@@ -5,7 +5,6 @@ from pyrogram.raw.all import layer
 from aiohttp import web
 from utils import web_server
 import time
-from catbox import CatboxUploader
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 from config import Config
