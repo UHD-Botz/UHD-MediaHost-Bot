@@ -1,11 +1,12 @@
 from datetime import datetime
-from pytz import timezone
 from pyrogram import Client, filters
 from aiohttp import web
 from utils import web_server
 import time
-from config import Config
+import asyncio
 import os
+import sys
+from config import Config
 
 BOT_UPTIME = time.time()
 
@@ -28,7 +29,7 @@ class UHDMediaToLinkBot(Client):
         self.mention = me.mention
         self.username = me.username  
         self.uptime = BOT_UPTIME
-        
+
         # Start web server
         app = web.AppRunner(await web_server())
         await app.setup()
@@ -60,21 +61,15 @@ async def ping(bot, message):
 
 
 # -----------------------------
-# Stats Feature
+# Uptime Feature
 # -----------------------------
-@UHDMediaToLinkBot.on_message(filters.command("stats"))
-async def stats(bot, message):
+@UHDMediaToLinkBot.on_message(filters.command("uptime"))
+async def uptime(bot, message):
     uptime_seconds = int(time.time() - BOT_UPTIME)
     hours, remainder = divmod(uptime_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    uptime = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
-    text = (
-        f"📊 **Bot Statistics**\n"
-        f"• Uptime: `{uptime}`\n"
-        f"• Bot Name: `{bot.username}`\n"
-        f"• Admin: `{Config.ADMIN}`"
-    )
-    await message.reply_text(text)
+    uptime_text = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+    await message.reply_text(f"⏱ Bot Uptime: `{uptime_text}`")
 
 
 # -----------------------------
@@ -86,10 +81,20 @@ async def react_with_emoji(bot, message):
     if message.text.startswith("/"):
         return
     try:
-        # Simple reaction: reply with 👍 emoji to every text message
         await message.reply_text("👍")
     except Exception:
         pass
+
+
+# -----------------------------
+# Restart Feature (Admin only)
+# -----------------------------
+@UHDMediaToLinkBot.on_message(filters.command("restart") & filters.user(Config.ADMIN))
+async def restart_bot(client, message):
+    await message.reply_text("♻️ Restarting the bot...")
+    await asyncio.sleep(1)
+    await client.stop()
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 if __name__ == "__main__":
