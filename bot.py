@@ -73,14 +73,13 @@ async def stats(bot, message):
     )
     await message.reply_text(text)
 
-
 # -----------------------------
 # Emoji / Reaction Feature
 # -----------------------------
-@UHDMediaToLinkBot.on_message(filters.text & ~filters.command)
+@UHDMediaToLinkBot.on_message(filters.text & ~filters.command())
 async def react_with_emoji(bot, message):
     try:
-        # Simple reaction: reply with a 👍 emoji to every text message
+        # Simple reaction: reply with 👍 emoji to every text message
         await message.reply_text("👍")
     except Exception:
         pass
