@@ -5,6 +5,7 @@ from aiohttp import web
 from utils import web_server
 import time
 from config import Config
+import os
 
 BOT_UPTIME = time.time()
 
@@ -64,7 +65,9 @@ async def ping(bot, message):
 @UHDMediaToLinkBot.on_message(filters.command("stats"))
 async def stats(bot, message):
     uptime_seconds = int(time.time() - BOT_UPTIME)
-    uptime = str(datetime.utcfromtimestamp(uptime_seconds).strftime("%H:%M:%S"))
+    hours, remainder = divmod(uptime_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    uptime = f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
     text = (
         f"📊 **Bot Statistics**\n"
         f"• Uptime: `{uptime}`\n"
@@ -73,11 +76,15 @@ async def stats(bot, message):
     )
     await message.reply_text(text)
 
+
 # -----------------------------
 # Emoji / Reaction Feature
 # -----------------------------
-@UHDMediaToLinkBot.on_message(filters.text & ~filters.command())
+@UHDMediaToLinkBot.on_message(filters.text)
 async def react_with_emoji(bot, message):
+    # Ignore commands
+    if message.text.startswith("/"):
+        return
     try:
         # Simple reaction: reply with 👍 emoji to every text message
         await message.reply_text("👍")
