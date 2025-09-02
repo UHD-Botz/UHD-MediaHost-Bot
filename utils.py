@@ -24,6 +24,11 @@ async def web_server():
 
 
 async def upload_to_envs(file_path: str, timeout: int = 120) -> str:
+    """
+    Uploads file to envs.sh. First tries PUT to https://envs.sh/<filename>, 
+    then falls back to multipart POST if PUT fails.
+    Returns the URL string on success, raises RuntimeError on failure.
+    """
     filename = os.path.basename(file_path)
     put_url = f"https://envs.sh/{filename}"
 
@@ -55,19 +60,3 @@ async def upload_to_envs(file_path: str, timeout: int = 120) -> str:
                         raise RuntimeError(f"envs.sh POST failed with status {resp.status}")
     except Exception as e:
         raise RuntimeError(f"envs.sh upload failed: {e}")
-
-
-# -----------------------------
-# Log channel feature
-# -----------------------------
-async def send_log_message(bot, message: str):
-    """
-    Sends a log message to the configured LOG_CHANNEL.
-    Usage: await send_log_message(bot, "Your message here")
-    """
-    if not getattr(Config, "LOG_CHANNEL", None):
-        return
-    try:
-        await bot.send_message(chat_id=Config.LOG_CHANNEL, text=message)
-    except Exception as e:
-        print(f"Failed to send log message: {e}")
