@@ -10,6 +10,9 @@ from config import Config
 
 BOT_UPTIME = time.time()
 
+# Simple in-memory banned users set
+BANNED_USERS = set()
+
 class UHDMediaToLinkBot(Client):
     def __init__(self):
         super().__init__(
@@ -82,6 +85,49 @@ class UHDMediaToLinkBot(Client):
                 os._exit(0)  # Exit process, platform restarts container
 
             asyncio.create_task(restart_later())
+
+        # -----------------
+        # BAN Command
+        # -----------------
+        @self.on_message(filters.command("ban") & filters.user(Config.ADMIN))
+        async def ban_user(bot, message):
+            if not message.reply_to_message:
+                await message.reply_text("⚠️ Reply to the user's message you want to ban.")
+                return
+            user_id = message.reply_to_message.from_user.id
+            if user_id in BANNED_USERS:
+                await message.reply_text("User is already banned.")
+                return
+            BANNED_USERS.add(user_id)
+            await message.reply_text(f"✅ User {user_id} has been banned.")
+
+        # -----------------
+        # UNBAN Command
+        # -----------------
+        @self.on_message(filters.command("unban") & filters.user(Config.ADMIN))
+        async def unban_user(bot, message):
+            if not message.reply_to_message:
+                await message.reply_text("⚠️ Reply to the banned user's message to unban.")
+                return
+            user_id = message.reply_to_message.from_user.id
+            if user_id not in BANNED_USERS:
+                await message.reply_text("User is not banned.")
+                return
+            BANNED_USERS.remove(user_id)
+            await message.reply_text(f"✅ User {user_id} has been unbanned.")
+
+        # -----------------
+        # BLOCK BANNED USERS FROM INTERACTING
+        # -----------------
+        @self.on_message(filters.incoming)
+        async def block_banned_users(bot, message):
+            if message.from_user and message.from_user.id in BANNED_USERS:
+                # Optionally delete their messages
+                try:
+                    await message.delete()
+                except:
+                    pass
+                return  # stop processing further for this user
 
 
 if __name__ == "__main__":
