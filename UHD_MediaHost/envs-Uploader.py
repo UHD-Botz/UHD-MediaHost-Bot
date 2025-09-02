@@ -3,7 +3,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import upload_to_envs
 
-RKN_PROGRESS = """<b>\n
+RKN_PROGRESS = """<b>
 ╭━━━━❰RKN PROCESSING...❱━➣
 ┣⪼ 🗃️ ꜱɪᴢᴇ: {1} | {2}
 ┣⪼ ⏳️ ᴅᴏɴᴇ : {0}%
@@ -14,7 +14,7 @@ RKN_PROGRESS = """<b>\n
 async def progress_for_pyrogram(current, total, ud_type, message, start):
     now = time.time()
     diff = now - start
-    if round(diff % 5.00) == 0 or current == total:
+    if round(diff % 5.0) == 0 or current == total:
         try:
             percentage = current * 100 / total
             speed = current / diff
@@ -40,7 +40,7 @@ async def progress_for_pyrogram(current, total, ud_type, message, start):
                 await message.edit(text=f"{ud_type}\n\n{tmp}")
             except:
                 pass
-        except Exception:
+        except:
             pass
 
 def humanbytes(size):
@@ -52,7 +52,7 @@ def humanbytes(size):
     while size > power:
         size /= power
         n += 1
-    return str(round(size, 2)) + " " + Dic_powerN[n] + 'ʙ'
+    return str(round(size,2)) + " " + Dic_powerN[n] + 'ʙ'
 
 def TimeFormatter(milliseconds: int) -> str:
     seconds, milliseconds = divmod(int(milliseconds), 1000)
@@ -65,60 +65,3 @@ def TimeFormatter(milliseconds: int) -> str:
         ((str(seconds) + "ꜱ, ") if seconds else "") + \
         ((str(milliseconds) + "ᴍꜱ, ") if milliseconds else "")
     return tmp[:-2]
-
-
-@Client.on_message(filters.media & filters.private)
-async def getmedia(bot, update):
-    # file size check (if present)
-    try:
-        file = getattr(update, update.media.value)
-        if file.file_size and file.file_size > 200 * 1024 * 1024:
-            return await update.reply_text("sᴏʀʀʏ ᴅᴜᴅᴇ, ᴛʜɪs ʙᴏᴛ ᴅᴏᴇsɴ'ᴛ sᴜᴘᴘᴏʀᴛ ғɪʟᴇs ʟᴀʀɢᴇʀ ᴛʜᴀɴ 200 ᴍʙ+")
-    except:
-        pass
-
-    message = await update.reply_text("`Processing...`", quote=True, disable_web_page_preview=True)
-
-    # create a unique filename
-    ext = ""
-    if update.photo:
-        ext = ".jpg"
-    elif update.video:
-        ext = ".mp4"
-    elif update.document:
-        ext = os.path.splitext(update.document.file_name)[1] or ".bin"
-    elif update.audio:
-        ext = ".mp3"
-
-    ts = int(time.time())
-    filename = f"{update.from_user.id}_{ts}{ext}"
-    dl_dir = "download"
-    if not os.path.exists(dl_dir):
-        os.makedirs(dl_dir, exist_ok=True)
-    dl_path = await bot.download_media(message=update, progress=progress_for_pyrogram,
-                                       progress_args=('Uploading to envs.sh', message, time.time()),
-                                       file_name=os.path.join(dl_dir, filename))
-
-    try:
-        link = await upload_to_envs(dl_path)
-    except Exception as e:
-        await message.edit_text(f"❌ Upload failed: {e}")
-        try:
-            os.remove(dl_path)
-        except:
-            pass
-        return
-
-    reply_markup = InlineKeyboardMarkup(
-        [[
-            InlineKeyboardButton(text="Open Link", url=f"{link}"),
-            InlineKeyboardButton(text="Share Link", url=f"https://telegram.me/share/url?url={link}")
-        ],[
-            InlineKeyboardButton(text="Join Updates Channel", url="https://telegram.me/RknDeveloper")
-        ]]
-    )
-    await message.edit_text(text=f"Link: `{link}`", disable_web_page_preview=False, reply_markup=reply_markup)
-    try:
-        os.remove(dl_path)
-    except:
-        pass
