@@ -2,8 +2,8 @@ import os
 
 class Config:
     # Telegram Bot Config
-    API_ID = int(os.getenv("API_ID", ""))         # your API ID
-    API_HASH = os.getenv("API_HASH", "")  # your API Hash
+    API_ID = int(os.getenv("API_ID", "23889992"))         # your API ID
+    API_HASH = os.getenv("API_HASH", "70bf3c9baebf30afff8c32649bf23c3d")  # your API Hash
     BOT_TOKEN = os.getenv("BOT_TOKEN", "")  # your Bot Token
 
     # Other Configs
