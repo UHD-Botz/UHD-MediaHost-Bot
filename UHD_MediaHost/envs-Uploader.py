@@ -1,14 +1,12 @@
 from datetime import datetime
 from pytz import timezone
-from pyrogram import Client, __version__, filters
-from pyrogram.raw.all import layer
-import os, time, re, math
-from catbox import CatboxUploader
+from pyrogram import Client, filters
+import os, time, re, math, aiohttp
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 
 
-RKN_PROGRESS = """<b>\n
-╭━━━━❰RKN PROCESSING...❱━➣
+UHD_PROGRESS = """<b>\n
+╭━━━━❰UHD PROCESSING...❱━➣
 ┣⪼ 🗃️ ꜱɪᴢᴇ: {1} | {2}
 ┣⪼ ⏳️ ᴅᴏɴᴇ : {0}%
 ┣⪼ 🚀 ꜱᴩᴇᴇᴅ: {3}/s
@@ -32,7 +30,7 @@ async def progress_for_pyrogram(current, total, ud_type, message, start):
             ''.join(["▣" for i in range(math.floor(percentage / 5))]),
             ''.join(["▢" for i in range(20 - math.floor(percentage / 5))])
         )            
-        tmp = progress + RKN_PROGRESS.format( 
+        tmp = progress + UHD_PROGRESS.format( 
             round(percentage, 2),
             humanbytes(current),
             humanbytes(total),
@@ -67,29 +65,47 @@ def TimeFormatter(milliseconds: int) -> str:
         ((str(milliseconds) + "ᴍꜱ, ") if milliseconds else "")
     return tmp[:-2] 
     
-async def catbox_link_convert(bot, update, edit):
+
+# 🔥 Catbox -> Envs.sh replacement
+async def envs_link_convert(bot, update, edit):
+    # extension detect karna
     ext = ""
     if update.photo:
         ext = '.jpg'        
     elif update.video:
         ext = '.mp4'        
     elif update.document:
-        ext = '.mkv'        
+        ext = os.path.splitext(update.document.file_name)[-1] or '.bin'        
     elif update.audio:
         ext = '.mp3'
            
     medianame = "download/" + str(update.from_user.id) + ext
-    dl_path = await bot.download_media(message=update, progress=progress_for_pyrogram,
-            progress_args=('Uploading Catbox Server', edit, time.time()), file_name=medianame) if ext else await bot.download_media(message=update, progress=progress_for_pyrogram,
-            progress_args=('Uploading Catbox Server', edit, time.time()))
-    uploader = CatboxUploader()
-    link = uploader.upload_file(dl_path)
-    print(f'Uploaded file: {link}')
+    dl_path = await bot.download_media(
+        message=update,
+        progress=progress_for_pyrogram,
+        progress_args=('Uploading to envs.sh', edit, time.time()),
+        file_name=medianame
+    )
+
+    # Upload to envs.sh
+    link = None
+    try:
+        async with aiohttp.ClientSession() as session:
+            filename = os.path.basename(dl_path)
+            upload_url = f"https://envs.sh/{filename}"
+            async with session.put(upload_url, data=open(dl_path, "rb")) as resp:
+                if resp.status == 200:
+                    link = (await resp.text()).strip()
+    except Exception as e:
+        print(f"Upload failed: {e}")
+
     try:
         os.remove(dl_path)
     except:
         pass
+
     return link
+
 
 @Client.on_message(filters.command('start') & filters.private)
 async def start_command(client, message):
@@ -97,12 +113,10 @@ async def start_command(client, message):
         InlineKeyboardButton('Uᴩᴅᴀᴛᴇꜱ', url='https://t.me/RknDeveloper'),
         InlineKeyboardButton('Sᴜᴩᴩᴏʀᴛ', url='https://t.me/RknBots_Support')
         ],[
-        #InlineKeyboardButton('🎛️ Aʙᴏᴜᴛ', callback_data='about'),
-        #InlineKeyboardButton('🛠️ Hᴇʟᴩ', callback_data='help')
-        #],[
         InlineKeyboardButton('ᴜᴘᴅᴀᴛᴇ ᴄʜᴀɴɴᴇʟ', url="https://t.me/+klNh8N3hXjM1MDFk")
     ]])
-    await message.reply_text("I Am Media To Link Convert Bot.", reply_markup=button)
+    await message.reply_text("I Am Media To Link Convert Bot (envs.sh version).", reply_markup=button)
+
 
 async def file_size_function(update):
     try:
@@ -111,29 +125,30 @@ async def file_size_function(update):
             return True
     except:
         return False
-        
     return False
         
+
 @Client.on_message(filters.media & filters.private)
 async def getmedia(bot, update):
     if await file_size_function(update):
         return await update.reply_text("sᴏʀʀʏ ᴅᴜᴅᴇ, ᴛʜɪs ʙᴏᴛ ᴅᴏᴇsɴ'ᴛ sᴜᴘᴘᴏʀᴛ ғɪʟᴇs ʟᴀʀɢᴇʀ ᴛʜᴀɴ 200 ᴍʙ+")
-       
-    message = await update.reply_text(
-            text="`Processing...`",
-            quote=True,
-            disable_web_page_preview=True
-        )
-    link = await catbox_link_convert(bot, update, message)
-    reply_markup=InlineKeyboardMarkup(
+
+    message = await update.reply_text("`Processing...`", quote=True, disable_web_page_preview=True)
+    link = await envs_link_convert(bot, update, message)
+
+    if not link:
+        return await message.edit_text("❌ Upload failed. Please try again later.")
+
+    reply_markup = InlineKeyboardMarkup(
         [[
-        InlineKeyboardButton(text="Open Link", url=f"{link}"),
-        InlineKeyboardButton(text="Share Link", url=f"https://telegram.me/share/url?url={link}")
+            InlineKeyboardButton(text="Open Link", url=f"{link}"),
+            InlineKeyboardButton(text="Share Link", url=f"https://telegram.me/share/url?url={link}")
         ],[
-        InlineKeyboardButton(text="Join Updates Channel", url="https://telegram.me/RknDeveloper")
-        ]])   
+            InlineKeyboardButton(text="Join Updates Channel", url="https://telegram.me/RknDeveloper")
+        ]]
+    )   
     await message.edit_text(
         text=f"Link: `{link}`",
         disable_web_page_preview=False,
-        reply_markup=reply_markup)
-       
+        reply_markup=reply_markup
+    )
