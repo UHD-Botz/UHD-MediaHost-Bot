@@ -3,7 +3,6 @@ import os
 import time
 from aiohttp import web
 from config import Config
-from db import Database
 
 routes = web.RouteTableDef()
 START_TIME = time.time()
@@ -62,22 +61,3 @@ async def upload_to_envs(file_path: str, timeout: int = 120) -> str:
                         raise RuntimeError(f"envs.sh POST failed with status {resp.status}")
     except Exception as e:
         raise RuntimeError(f"envs.sh upload failed: {e}")
-
-# --- File cache helpers (for database) ---
-async def save_file_cache(db: Database, msg):
-    """
-    Save media info into DB.files cache.
-    """
-    media = msg.document or msg.video or msg.audio or msg.photo
-    if not media:
-        return
-    unique_id = getattr(media, "file_unique_id", None)
-    file_id = getattr(media, "file_id", None)
-    if unique_id and file_id:
-        await db.cache_file(unique_id, file_id, file_ref=getattr(media, "file_ref", None))
-
-async def get_cached_file(db: Database, unique_id: str):
-    """
-    Fetch cached file entry by unique_id.
-    """
-    return await db.get_cached(unique_id)
