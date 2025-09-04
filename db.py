@@ -1,3 +1,4 @@
+# db.py
 from typing import Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ServerSelectionTimeoutError
@@ -10,11 +11,11 @@ class Database:
         self.client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=8000)
         self.db = self.client[name]
         # collections
-        self.users = self.db.users
-        self.bans = self.db.bans
-        self.logs = self.db.logs
-        self.files = self.db.files
-        self.meta = self.db.meta
+        self.users = self.db.users          # {user_id, first_name, username, joined_at}
+        self.bans = self.db.bans            # {user_id, reason, by, ts}
+        self.logs = self.db.logs            # arbitrary events
+        self.files = self.db.files          # cached files {file_unique_id, file_id, file_ref, ...}
+        self.meta = self.db.meta            # misc key-values
 
     async def ping(self) -> bool:
         try:
@@ -24,12 +25,18 @@ class Database:
             return False
 
     async def ensure_indexes(self):
+        # cleanup invalid docs before creating unique indexes
+        await self.users.delete_many({"user_id": None})
+        await self.users.delete_many({"user_id": {"$exists": False}})
+
         await self.users.create_index("user_id", unique=True)
         await self.bans.create_index("user_id", unique=True)
         await self.files.create_index("file_unique_id", unique=True)
 
     # --- Users ---
     async def add_user(self, user_id: int, first_name: Optional[str], username: Optional[str]):
+        if not user_id:   # prevent inserting null or 0
+            return
         now = int(time.time())
         await self.users.update_one(
             {"user_id": user_id},
@@ -46,6 +53,8 @@ class Database:
         return await self.bans.find_one({"user_id": user_id}) is not None
 
     async def ban(self, user_id: int, reason: Optional[str], by: Optional[int]):
+        if not user_id:
+            return
         await self.bans.update_one(
             {"user_id": user_id},
             {"$set": {"user_id": user_id, "reason": reason, "by": by, "ts": int(time.time())}},
@@ -63,6 +72,8 @@ class Database:
 
     # --- File cache ---
     async def cache_file(self, file_unique_id: str, file_id: str, file_ref: Optional[str] = None, **meta):
+        if not file_unique_id or not file_id:
+            return
         await self.files.update_one(
             {"file_unique_id": file_unique_id},
             {"$set": {"file_unique_id": file_unique_id, "file_id": file_id, "file_ref": file_ref, **meta}},
