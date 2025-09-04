@@ -1,3 +1,4 @@
+# bot.py
 import os
 import time
 import asyncio
@@ -27,21 +28,21 @@ class UHDMediaToLinkBot(Client):
         self.username = me.username
         self.uptime = BOT_UPTIME
 
-        # DB init
+        # DB init (clean + ensure indexes)
         await self.db.ensure_indexes()
 
         # Start web server
-        app = await web_server()
-        runner = web.AppRunner(app)
-        await runner.setup()
-        await web.TCPSite(runner, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
+        app = web.AppRunner(await web_server())
+        await app.setup()
+        await web.TCPSite(app, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
 
         print(f"{me.first_name} Started.....✨️")
 
+        # Notify admin
         if getattr(Config, "ADMIN", None):
             try:
                 await self.send_message(Config.ADMIN[0], "✅ Bot restarted and is now online!")
-            except:
+            except Exception:
                 pass
 
         self.add_handlers()
@@ -51,7 +52,7 @@ class UHDMediaToLinkBot(Client):
         print("Bot Stopped 🙄")
 
     def add_handlers(self):
-        # Ping
+        # ----------------- Ping -----------------
         @self.on_message(filters.command("ping"))
         async def ping(bot, message):
             start = time.time()
@@ -59,7 +60,7 @@ class UHDMediaToLinkBot(Client):
             end = time.time()
             await msg.edit_text(f"🏓 Pong!\nResponse time: {round((end-start)*1000)} ms")
 
-        # Uptime
+        # ----------------- Uptime -----------------
         @self.on_message(filters.command("uptime"))
         async def uptime(bot, message):
             uptime_seconds = int(time.time() - BOT_UPTIME)
@@ -67,7 +68,7 @@ class UHDMediaToLinkBot(Client):
             minutes, seconds = divmod(remainder, 60)
             await message.reply_text(f"⏱ Bot Uptime: {hours}h {minutes}m {seconds}s")
 
-        # Restart (admin only)
+        # ----------------- Restart (admin only) -----------------
         @self.on_message(filters.command("restart") & filters.user(Config.ADMIN))
         async def restart_handler(bot, message):
             await message.reply_text("♻️ Restarting bot...")
@@ -76,7 +77,7 @@ class UHDMediaToLinkBot(Client):
                 os._exit(0)
             asyncio.create_task(restart_later())
 
-        # Start
+        # ----------------- Start -----------------
         @self.on_message(filters.private & filters.command("start"))
         async def start_cmd(bot, message):
             if await self.db.is_banned(message.from_user.id):
@@ -87,13 +88,13 @@ class UHDMediaToLinkBot(Client):
                 "👋 Hello! I am UHD MediaToLink Bot.\n\nUse /ping to check latency or /uptime to see how long I’ve been running."
             )
 
-        # Stats
+        # ----------------- Stats (admin only) -----------------
         @self.on_message(filters.command("stats") & filters.user(Config.ADMIN))
         async def stats(bot, message):
             total = await self.db.total_users()
             await message.reply_text(f"📊 Total users: {total}")
 
-        # Ban / Unban
+        # ----------------- Ban / Unban -----------------
         @self.on_message(filters.command("ban") & filters.user(Config.ADMIN))
         async def ban_cmd(bot, message):
             args = message.command[1:]
@@ -116,13 +117,18 @@ class UHDMediaToLinkBot(Client):
             else:
                 await message.reply_text(f"ℹ️ {uid} was not banned")
 
-        # Catch-all
+        # ----------------- Catch-all private messages -----------------
         @self.on_message(filters.private & ~filters.command(["start","ping","uptime","restart","stats","ban","unban"]))
         async def priv_handler(bot, message):
             if await self.db.is_banned(message.from_user.id):
                 return await message.reply_text("🚫 You are banned.")
             await self.db.add_user(message.from_user.id, message.from_user.first_name, message.from_user.username)
-            await self.db.log_event(type="msg", user_id=message.from_user.id, text=message.text or "", content=str(message.media))
+            await self.db.log_event(
+                type="msg",
+                user_id=message.from_user.id,
+                text=message.text or "",
+                content=str(message.media)
+            )
             await message.reply_text("✅ Received your message.")
 
 if __name__ == "__main__":
