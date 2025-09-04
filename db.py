@@ -1,4 +1,3 @@
-# db.py
 from typing import Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ServerSelectionTimeoutError
@@ -11,11 +10,11 @@ class Database:
         self.client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=8000)
         self.db = self.client[name]
         # collections
-        self.users = self.db.users          # {user_id, first_name, username, joined_at}
-        self.bans = self.db.bans            # {user_id, reason, by, ts}
-        self.logs = self.db.logs            # arbitrary events
-        self.files = self.db.files          # cached files {file_unique_id, file_id, file_ref, ...}
-        self.meta = self.db.meta            # misc key-values
+        self.users = self.db.users
+        self.bans = self.db.bans
+        self.logs = self.db.logs
+        self.files = self.db.files
+        self.meta = self.db.meta
 
     async def ping(self) -> bool:
         try:
@@ -62,7 +61,7 @@ class Database:
         data["ts"] = data.get("ts", int(time.time()))
         await self.logs.insert_one(data)
 
-    # --- File cache (optional for media hosting/cdn refs) ---
+    # --- File cache ---
     async def cache_file(self, file_unique_id: str, file_id: str, file_ref: Optional[str] = None, **meta):
         await self.files.update_one(
             {"file_unique_id": file_unique_id},
