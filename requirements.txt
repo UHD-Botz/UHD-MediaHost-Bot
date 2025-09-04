@@ -1,8 +1,6 @@
 pyrogram==2.0.106
 tgcrypto
 aiohttp==3.9.5
-
-# MongoDB / Database
 motor==3.6.0
-pymongo==4.10.1
+pymongo==4.9.2
 dnspython==2.6.1
