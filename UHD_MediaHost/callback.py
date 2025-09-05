@@ -1,6 +1,6 @@
 from pyrogram import Client
 from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
-from plugins.script import text   # fixed import
+from Script import text
 
 @Client.on_callback_query()
 async def callback_query_handler(client, query: CallbackQuery):
