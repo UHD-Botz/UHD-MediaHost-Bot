@@ -4,6 +4,7 @@ import asyncio
 from pyrogram import Client, filters
 from aiohttp import web
 from config import Config
+from Script import text
 from utils import web_server
 
 BOT_UPTIME = time.time()
