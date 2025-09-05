@@ -2,6 +2,7 @@ import aiohttp
 import os
 import time
 from aiohttp import web
+from Script import text
 from config import Config
 
 routes = web.RouteTableDef()
