@@ -4,13 +4,13 @@ import asyncio
 from pyrogram import Client, filters
 from aiohttp import web
 from Script import TEXT
-from UHD_MediaHost import callback
-from UHD_MediaHost.callback import callback_query_handler
 from config import Config
 from utils import web_server
 
-BOT_UPTIME = time.time()
+# Import callback registration
+from UHD_MediaHost import callback
 
+BOT_UPTIME = time.time()
 
 class UHDMediaToLinkBot(Client):
     def __init__(self):
@@ -30,9 +30,9 @@ class UHDMediaToLinkBot(Client):
         self.uptime = BOT_UPTIME
 
         # Start web server
-        app = web.AppRunner(await web_server())
-        await app.setup()
-        await web.TCPSite(app, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
+        app_runner = web.AppRunner(await web_server())
+        await app_runner.setup()
+        await web.TCPSite(app_runner, "0.0.0.0", getattr(Config, "PORT", 8080)).start()
 
         print(f"{me.first_name} Started.....✨️")
 
@@ -43,7 +43,9 @@ class UHDMediaToLinkBot(Client):
             except:
                 pass
 
+        # Register command and callback handlers
         self.add_handlers()
+        callback.register_callbacks(self)
 
     async def stop(self, *args):
         await super().stop()
