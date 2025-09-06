@@ -3,7 +3,7 @@ import time
 import asyncio
 from pyrogram import Client, filters
 from aiohttp import web
-from script import TEXT
+from Script import TEXT
 from UHDBots import callback
 from config import Config
 from utils import web_server
