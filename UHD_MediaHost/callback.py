@@ -1,10 +1,13 @@
+from pyrogram import filters  # ✅ Added missing import
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from Script import TEXT as text
 
 def register_callbacks(bot):
+    # -----------------
+    # /start command handler
+    # -----------------
     @bot.on_message(filters.private & filters.command("start"))
     async def start_handler(client, message):
-        # Sends the start message from Script.py
         await message.reply_text(
             text.START.format(message.from_user.mention),
             disable_web_page_preview=True,
@@ -22,6 +25,9 @@ def register_callbacks(bot):
             ])
         )
 
+    # -----------------
+    # Callback buttons handler
+    # -----------------
     @bot.on_callback_query()
     async def callback_query_handler(client, query: CallbackQuery):
         if query.data == "menu":
@@ -60,14 +66,11 @@ def register_callbacks(bot):
                 ])
             )
 
-        elif query.data == "special":
-            await query.answer("No special features enabled yet!", show_alert=True)
-
         elif query.data == "close":
             await query.message.delete()
 
         elif query.data == "start":
-            # Re-send the start message from Script.py
+            # Re-send TEXT.START when HOME/BACK is pressed
             await query.message.edit_text(
                 text.START.format(query.from_user.mention),
                 disable_web_page_preview=True,
