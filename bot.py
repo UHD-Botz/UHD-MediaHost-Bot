@@ -77,7 +77,34 @@ class UHDMediaToLinkBot(Client):
                 await asyncio.sleep(1)
                 os._exit(0)
             asyncio.create_task(restart_later())
-        
+
+        # -----------------
+        # Start
+        # -----------------
+        @self.on_message(filters.command("start") & filters.private)
+        async def start_handler(bot, message):
+            from Script import text
+            from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+            buttons = InlineKeyboardMarkup([
+                [InlineKeyboardButton('➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ➕', url=f'https://t.me/{bot.me.username}?startgroup=true')],
+                [
+                    InlineKeyboardButton('🔥 ᴍᴇɴᴜ 🔥', callback_data='menu'),
+                    InlineKeyboardButton('❤️ ᴅᴏɴᴀᴛᴇ ❤️', url="https://uhd-donate-page.vercel.app/")
+                ],
+                [
+                    InlineKeyboardButton('😃 ʜᴇʟᴘ 😃', callback_data='help'),
+                    InlineKeyboardButton('🤖 ᴀʙᴏᴜᴛ 🤖', callback_data='about')
+                ],
+                [InlineKeyboardButton('➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕', url=f'https://t.me/{bot.me.username}?startchannel=true')],
+            ])
+
+            await message.reply_text(
+                text.START.format(message.from_user.mention),
+                disable_web_page_preview=True,
+                reply_markup=buttons
+            )
+
 
 if __name__ == "__main__":
     UHDMediaToLinkBot().run()
