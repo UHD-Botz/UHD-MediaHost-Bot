@@ -40,9 +40,11 @@ class UHDMediaToLinkBot(Client):
             except:
                 pass
 
-        # Register command and callback handlers
-        self.add_handlers()
+        # Register callback buttons from callback.py
         callback.register_callbacks(self)
+
+        # Register commands like /ping, /uptime, /restart
+        self.add_handlers()
 
     async def stop(self, *args):
         await super().stop()
@@ -81,8 +83,9 @@ class UHDMediaToLinkBot(Client):
             asyncio.create_task(restart_later())
 
         # -----------------
-        # Removed start command completely
+        # /start removed completely
         # -----------------
+        # Start message now only comes from Script.py TEXT.START via callback.py
 
 if __name__ == "__main__":
     UHDMediaToLinkBot().run()
