@@ -3,31 +3,28 @@ from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardBu
 from Script import TEXT as text
 
 def register_callbacks(bot):
-    # -----------------
-    # /start command handler
-    # -----------------
+
+    
     @bot.on_message(filters.private & filters.command("start"))
     async def start_handler(client, message):
         await message.reply_text(
             text.START.format(message.from_user.mention),
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton('➕ ADD ME TO YOUR GROUP ➕', url=f'https://t.me/{client.me.username}?startgroup=true')],
+                [InlineKeyboardButton('➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ➕', url=f'https://t.me/{client.me.username}?startgroup=true')],
                 [
-                    InlineKeyboardButton('🔥 MENU 🔥', callback_data='menu'),
-                    InlineKeyboardButton('❤️ DONATE ❤️', url="https://uhd-donate-page.vercel.app/")
+                    InlineKeyboardButton('🔥 ᴍᴇɴᴜ 🔥', callback_data='menu'),
+                    InlineKeyboardButton('❤️ ᴅᴏɴᴀᴛᴇ ❤️', url="https://uhd-donate-page.vercel.app/")
                 ],
                 [
-                    InlineKeyboardButton('😃 HELP 😃', callback_data='help'),
-                    InlineKeyboardButton('🤖 ABOUT 🤖', callback_data='about')
+                    InlineKeyboardButton('😃 ʜᴇʟᴘ 😃', callback_data='help'),
+                    InlineKeyboardButton('🤖 ᴀʙᴏᴜᴛ 🤖', callback_data='about')
                 ],
-                [InlineKeyboardButton('➕ ADD ME TO YOUR CHANNEL ➕', url=f'https://t.me/{client.me.username}?startchannel=true')],
+                [InlineKeyboardButton('➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕', url=f'https://t.me/{client.me.username}?startchannel=true')],
             ])
         )
 
-    # -----------------
-    # Callback buttons handler
-    # -----------------
+   
     @bot.on_callback_query()
     async def callback_query_handler(client, query: CallbackQuery):
         if query.data == "menu":
@@ -47,10 +44,10 @@ def register_callbacks(bot):
                 text.HELP.format(query.from_user.mention),
                 disable_web_page_preview=True,
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🤖 UPDATES 🤖", url="https://t.me/UHD_Bots"),
-                     InlineKeyboardButton("👀 SUPPORT 👀", url="https://t.me/UHDBots_Support")],
-                    [InlineKeyboardButton("🏹 BACK 🏹", callback_data="start"),
-                     InlineKeyboardButton("🔒 CLOSE 🔒", callback_data="close")]
+                    [InlineKeyboardButton("🤖 ᴜᴘᴅᴀᴛᴇs 🤖", url="https://t.me/UHD_Bots"),
+                     InlineKeyboardButton("👀 sᴜᴘᴘᴏʀᴛ 👀", url="https://t.me/UHDBots_Support")],
+                    [InlineKeyboardButton("🏹 ʙᴀᴄᴋ 🏹", callback_data="start"),
+                     InlineKeyboardButton("🔒 ᴄʟᴏsᴇ 🔒", callback_data="close")]
                 ])
             )
 
@@ -59,10 +56,10 @@ def register_callbacks(bot):
                 text.ABOUT,
                 disable_web_page_preview=True,
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("SOURCE CODE", url="https://github.com/UHD-Botz/UHD-Auto-React-Bot"),
-                     InlineKeyboardButton("OWNER", url="https://t.me/Ankan_Contact_BOT")],
-                    [InlineKeyboardButton("BACK", callback_data="start"),
-                     InlineKeyboardButton("CLOSE", callback_data="close")]
+                    [InlineKeyboardButton("sᴏᴜʀᴄᴇ ᴄᴏᴅᴇ", url="https://github.com/UHD-Botz/UHD-Auto-React-Bot"),
+                     InlineKeyboardButton("ᴏᴡɴᴇʀ", url="https://t.me/Ankan_Contact_BOT")],
+                    [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="start"),
+                     InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close")]
                 ])
             )
 
@@ -70,20 +67,22 @@ def register_callbacks(bot):
             await query.message.delete()
 
         elif query.data == "start":
-            # Re-send TEXT.START when HOME/BACK is pressed
+            
             await query.message.edit_text(
                 text.START.format(query.from_user.mention),
                 disable_web_page_preview=True,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton('➕ ADD ME TO YOUR GROUP ➕', url=f'https://t.me/{client.me.username}?startgroup=true')],
-                    [
-                        InlineKeyboardButton('🔥 MENU 🔥', callback_data='menu'),
-                        InlineKeyboardButton('❤️ DONATE ❤️', url="https://uhd-donate-page.vercel.app/")
-                    ],
-                    [
-                        InlineKeyboardButton('😃 HELP 😃', callback_data='help'),
-                        InlineKeyboardButton('🤖 ABOUT 🤖', callback_data='about')
-                    ],
-                    [InlineKeyboardButton('➕ ADD ME TO YOUR CHANNEL ➕', url=f'https://t.me/{client.me.username}?startchannel=true')],
-                ])
-            )
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton('➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ɢʀᴏᴜᴘ ➕', url=f'https://t.me/{client.me.username}?startgroup=true')],
+                [
+                    InlineKeyboardButton('🔥 ᴍᴇɴᴜ 🔥', callback_data='menu'),
+                    InlineKeyboardButton('❤️ ᴅᴏɴᴀᴛᴇ ❤️', url="https://uhd-donate-page.vercel.app/")
+                ],
+                [
+                    InlineKeyboardButton('😃 ʜᴇʟᴘ 😃', callback_data='help'),
+                    InlineKeyboardButton('🤖 ᴀʙᴏᴜᴛ 🤖', callback_data='about')
+                ],
+                [InlineKeyboardButton('➕ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕', url=f'https://t.me/{client.me.username}?startchannel=true')],
+            ])
+        )
+               
+
