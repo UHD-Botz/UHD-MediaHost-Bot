@@ -5,6 +5,7 @@ from pyrogram import Client, filters
 from aiohttp import web
 from Script import TEXT
 from UHD_MediaHost import callback
+from UHD_MediaHost.callback import callback_query_handler
 from config import Config
 from utils import web_server
 
