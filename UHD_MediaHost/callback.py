@@ -1,7 +1,8 @@
 from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from Script import TEXT
+from Script import TEXT as text
+from bot import app  # Import your bot instance
 
-@Client.on_callback_query()
+@app.on_callback_query()
 async def callback_query_handler(client, query: CallbackQuery):
     if query.data == "start":
         await query.message.edit_text(
@@ -54,7 +55,6 @@ async def callback_query_handler(client, query: CallbackQuery):
                  InlineKeyboardButton("ᴅᴏɴᴀᴛɪᴏɴ", url="https://uhd-donate-page.vercel.app/")],
                 [InlineKeyboardButton("ʙᴏᴛs", url="https://t.me/UHD_Bots/3"),
                  InlineKeyboardButton("ʜᴏᴍᴇ", callback_data="start")]
-
             ])
         )
 
