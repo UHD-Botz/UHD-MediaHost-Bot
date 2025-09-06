@@ -1,5 +1,4 @@
-from pyrogram import Client
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from Script import TEXT
 
 @Client.on_callback_query()
