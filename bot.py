@@ -77,16 +77,7 @@ class UHDMediaToLinkBot(Client):
                 await asyncio.sleep(1)
                 os._exit(0)
             asyncio.create_task(restart_later())
-
-        # -----------------
-        # Start
-        # -----------------
-        @self.on_message(filters.private & filters.command("start"))
-        async def start_cmd(bot, message):
-            await message.reply_text(
-                "👋 Hello! I am UHD MediaToLink Bot.\n\n"
-                "Use /ping to check latency or /uptime to see how long I’ve been running."
-            )
+        
 
 if __name__ == "__main__":
     UHDMediaToLinkBot().run()
