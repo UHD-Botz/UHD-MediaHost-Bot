@@ -3,11 +3,8 @@ import time
 import asyncio
 from pyrogram import Client, filters
 from aiohttp import web
-from Script import TEXT
 from config import Config
 from utils import web_server
-
-# Import callback registration
 from UHD_MediaHost import callback
 
 BOT_UPTIME = time.time()
@@ -84,14 +81,8 @@ class UHDMediaToLinkBot(Client):
             asyncio.create_task(restart_later())
 
         # -----------------
-        # Start (optional greeting)
+        # Removed start command completely
         # -----------------
-        @self.on_message(filters.private & filters.command("start"))
-        async def start_cmd(bot, message):
-            await message.reply_text(
-                "👋 Hello! I am UHD MediaToLink Bot.\n\nUse /ping to check latency or /uptime to see how long I’ve been running."
-            )
-
 
 if __name__ == "__main__":
     UHDMediaToLinkBot().run()
